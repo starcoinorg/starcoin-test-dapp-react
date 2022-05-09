@@ -1,69 +1,3 @@
-# 使用 React 开发 Dapp
-
-webpack5 + react + tailwind + starcoin
-
-## 环境搭建
-
-### 目录结构
-
-大致目录结构如下:
-
-```
-- starcoin-test-dapp-react
-    - src
-        - app.jsx
-        - index.jsx
-        - index.html
-    - package.json
-```
-
-### 安装 webpack
-
-`npm i --save-dev webpack webpack-cli webpack-dev-server html-webpack-plugin @pmmmwh/react-refresh-webpack-plugin`
-
-### 安装 babel
-
-`npm i --save-dev babel-loader @babel/preset-env @babel/preset-react @babel/plugin-transform-runtime react-refresh @babel/plugin-proposal-decorators`
-
-### 安装 tailwind 相关
-
-`npm i --save-dev style-loader css-loader postcss-loader tailwindcss autoprefixer`
-
-新建`postcss.config.js`，内容如下:
-
-```js
-module.exports = {
-  plugins: [require("tailwindcss"), require("autoprefixer")],
-};
-```
-
-新建`tailwind.config.js`，内容如下:
-
-```js
-module.exports = {
-  purge: ["./src/**/*.jsx"], // 本目录结构在src下
-  darkMode: false,
-  theme: {
-    extend: {},
-  },
-  variants: {
-    extend: {},
-  },
-  plugins: [],
-};
-```
-
-### 安装 react 以及 starcoin 相关
-
-`npm i react react-dom classnames @starcoin/starcoin @starcoin/starmask-onboarding @ethersproject/bytes`
-
-安装 starcoin 对应的本是 node 环境的一些 fallback
-
-`npm i --save-dev util assert process stream-browserify browserify-zlib buffer`
-
-### webpack 配置文件 `webpack.config.js`
-
-```js
 const path = require("path");
 const webpack = require("webpack");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
@@ -81,7 +15,7 @@ module.exports = {
   },
   devtool: false,
   resolve: {
-    extensions: ["*", ".jsx", ".js"],
+    extensions: ["*", ".ts", ".tsx", ".jsx", ".js", ".json", "svg"],
     fallback: {
       util: require.resolve("util/"),
       assert: require.resolve("assert/"),
@@ -126,6 +60,7 @@ module.exports = {
           },
         ],
       },
+    ],
   },
   plugins: [
     new webpack.ProvidePlugin({
@@ -138,44 +73,16 @@ module.exports = {
       inject: "head",
       hash: false,
     }),
-    // 热更新
     new ReactRefreshWebpackPlugin(),
     new webpack.HotModuleReplacementPlugin(),
   ],
   devServer: {
-    devMiddleware: {
-      writeToDisk: true, // 可以注释掉，我这里只为能看清打包结果
-    },
+    // devMiddleware: {
+    //   writeToDisk: true,
+    // },
     hot: true,
     open: false,
     port: 3000,
     historyApiFallback: true,
   },
 };
-```
-
-### node_modules 改动(黑操作)
-
-因为目前 starcoin 的官方包依赖了一个叫 read-bigInt 的第三方库，该库的打包结果并不完全符合 webpack5 中对`module`的标准，所以在安装完`@starcoin`的相关库后，需要去`node_modules/read-bigint/package.json`中将
-
-```json
-{
-    ...
-    "module": "dist.module/index.js",
-    ...
-}
-```
-
-修改为
-
-```json
-{
-    ...
-    "module": "dist/index.js",
-    ...
-}
-```
-
-## 开发步骤
-
-### starcoin
