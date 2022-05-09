@@ -2,7 +2,7 @@
 
 webpack5 + react + tailwind + starcoin
 
-![Demo图片](https://raw.github.com/LiuN1an/starcoin-test-dapp-react/blob/main/IMG/demo.png?raw=true)
+![Demo图片](https://raw.github.com/LiuN1an/starcoin-test-dapp-react/main/IMG/demo.png?raw=true)
 
 ## 环境搭建
 
