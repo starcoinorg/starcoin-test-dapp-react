@@ -156,28 +156,6 @@ module.exports = {
 };
 ```
 
-### node_modules 改动(黑操作)
-
-因为目前 starcoin 的官方包依赖了一个叫 read-bigInt 的第三方库，该库的打包结果并不完全符合 webpack5 中对`module`的标准，所以在安装完`@starcoin`的相关库后，需要去`node_modules/read-bigint/package.json`中将
-
-```json
-{
-    ...
-    "module": "dist.module/index.js",
-    ...
-}
-```
-
-修改为
-
-```json
-{
-    ...
-    "module": "dist/index.js",
-    ...
-}
-```
-
 ## 开发步骤
 
 ### starcoin
