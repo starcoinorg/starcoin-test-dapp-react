@@ -48,6 +48,9 @@ export const App = () => {
   // 已连接账户
   const [account, setAccount] = useState([]);
 
+  // 设置当前激活的账户
+  const [activeAccount, setActiveAccount] = useState("");
+
   const [isInstall, setInstall] = useState(true);
 
   const freshConnected = useCallback(async () => {
@@ -56,6 +59,7 @@ export const App = () => {
     });
     setAccount([...newAccounts]);
     setConnected(newAccounts && newAccounts.length > 0);
+    setActiveAccount(newAccounts.length > 0 ? newAccounts[0] : "");
   }, []);
 
   useEffect(() => {
