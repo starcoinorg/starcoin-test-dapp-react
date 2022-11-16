@@ -3,11 +3,13 @@ import BigNumber from "bignumber.js";
 import classnames from "classnames";
 import { providers } from "@starcoin/starcoin";
 import StarMaskOnboarding from "@starcoin/starmask-onboarding";
-import { Account, Mask, makeModal } from "./modal";
+import { AptosClient } from 'aptos';
+import { Account, Mask, makeModal, Token, NODE_URL } from "./modal";
 import "./style.css";
 
 export let starcoinProvider;
 
+const ticker = 'APT'
 const currentUrl = new URL(window.location.href);
 const forwarderOrigin =
   currentUrl.hostname === "localhost"
@@ -28,7 +30,7 @@ const gas = {
 export const App = () => {
   // Send STC默认信息
   const [defaultToAddr, setAddr] = useState(
-    "0x46ecE7c1e39fb6943059565E2621b312"
+    "0xf92e7C5D877036A5C0e5Aa0EA2f38650de307a5Ead1E1827B97bc5f935ed35B3"
   );
   // Send STC默认信息
   const [defaultAmount, setAmount] = useState("0.001");
@@ -56,6 +58,10 @@ export const App = () => {
     });
     setAccount([...newAccounts]);
     setConnected(newAccounts && newAccounts.length > 0);
+    console.log({newAccounts})
+    const client = new AptosClient(NODE_URL)
+    const chainId = await client.getChainId()
+      console.log({ chainId })
   }, []);
 
   useEffect(() => {
@@ -134,7 +140,7 @@ export const App = () => {
               "bg-fixed bg-no-repeat bg-cover"
             )}
           >
-            Starcoin
+            Aptos
           </div>
           <div className=" flex justify-center mt-4">
             <div className="duration-300 sm:min-w-3/4 lg:min-w-1/2 border-2 border-slate-50 shadow-xl p-8 rounded-2xl mb-6 flex justify-center flex-col">
@@ -171,19 +177,12 @@ export const App = () => {
               >
                 {/* Address */}
                 <div className="rounded-2xl bg-green-100 text-green-600 p-2 mt-4">
-                  <div className="font-bold">Current address</div>
-                  <div className="flex justify-center">
-                    {account.map((t, index) => (
-                      <div key={index} className="m-2">
-                        {t}
-                      </div>
-                    ))}
-                  </div>
+                  <div className="font-bold">Current address: {account[0]}</div>
                 </div>
 
-                {/* Send STC */}
+                {/* Send APT */}
                 <div className="rounded-2xl border-2 border-slate-50 shadow-xl p-2 mt-4">
-                  <div className="font-bold">Send STC</div>
+                  <div className="font-bold">Send {ticker}</div>
                   <div className="mt-1">To</div>
                   <div className="mt-1">
                     <input
@@ -194,7 +193,7 @@ export const App = () => {
                       }}
                     />
                   </div>
-                  <div className="mt-1">Amount of STC</div>
+                  <div className="mt-1">Amount of {ticker}</div>
                   <div className="mt-1">
                     <input
                       className="w-full focus:outline-none p-4 border-solid border-2 border-x-sky-100 rounded-2xl"
@@ -256,7 +255,25 @@ export const App = () => {
                       });
                     }}
                   >
-                    0x1::TransferScripts::peer_to_peer_v2
+                    0x1::coin::transfer APT
+                  </div>
+
+                  <div
+                    className="mt-4 rounded-2xl bg-blue-900 flex justify-center text-white p-4 font-bold cursor-pointer hover:bg-blue-700 duration-300"
+                    onClick={() => {
+                      makeModal({
+                        children: ({ onClose }) => {
+                          return (
+                            <>
+                              <Mask onClose={onClose} />
+                              <Token />
+                            </>
+                          );
+                        },
+                      });
+                    }}
+                  >
+                    0x1::coin::transfer Token
                   </div>
                 </div>
               </div>

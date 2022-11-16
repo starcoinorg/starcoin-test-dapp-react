@@ -43,8 +43,9 @@
     },
     "dependencies": {
         "@ethersproject/bytes": "^5.6.1",
-        "@starcoin/starcoin": "^2.1.4",
+        "@starcoin/starcoin": "2.2.0",
         "@starcoin/starmask-onboarding": "^1.2.0",
+        "aptos": "^1.3.15",
         "bignumber.js": "^9.0.2",
         "classnames": "^2.3.1",
         "react": "^18.1.0",
