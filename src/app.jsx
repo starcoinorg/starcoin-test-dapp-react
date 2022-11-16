@@ -4,6 +4,9 @@ import classnames from "classnames";
 import { providers } from "@starcoin/starcoin";
 import StarMaskOnboarding from "@starcoin/starmask-onboarding";
 import { AptosClient } from 'aptos';
+import * as ed from '@noble/ed25519';
+import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
+import { arrayify, hexlify } from '@ethersproject/bytes';
 import { Account, Mask, makeModal, Token, NODE_URL } from "./modal";
 import "./style.css";
 
@@ -49,8 +52,10 @@ export const App = () => {
   const [isStarMaskConnected, setConnected] = useState(false);
   // 已连接账户
   const [account, setAccount] = useState([]);
-
+  const [chainId, setChainId] = useState(1);
   const [isInstall, setInstall] = useState(true);
+  const [signResult, setSignResult] = useState("");
+  const [signVerifyResult, setSignVerifyResult] = useState("");
 
   const freshConnected = useCallback(async () => {
     const newAccounts = await window.starcoin.request({
@@ -62,6 +67,7 @@ export const App = () => {
     const client = new AptosClient(NODE_URL)
     const chainId = await client.getChainId()
       console.log({ chainId })
+      setChainId(chainId)
   }, []);
 
   useEffect(() => {
@@ -129,6 +135,55 @@ export const App = () => {
       setTrasError(e.message || "Unkown Error");
     }
   }, [defaultToAddr, defaultExpired, defaultAmount]);
+
+  const exampleMessage = 'Example `personal_sign` message 中文'
+  const privateKeyHex = '2d0e69083decab751f8df38b7ca2c4f9f26691e3f06aa82290ee242cfc96dd93'
+
+  const handleSignMessage = useCallback(async () => {
+    // const from = account[0]
+    // const msg = `0x${ Buffer.from(exampleMessage, 'utf8').toString('hex') }`
+    // console.log({ msg })
+    // const networkId = chainId
+    // const extraParams = { networkId }
+    // const sign = await window.starcoin.request({
+    //   method: 'personal_sign',
+    //   // params: [msg, from, 'Example password'],
+    //   // extraParams = params[2] || {}; means it should be an object:
+    //   // params: [msg, from, { pwd: 'Example password' }],
+    //   params: [msg, from, extraParams],
+    // })
+    // setSignResult(sign)
+
+    const nonce = "random_string"
+    const fullmsg = `APTOS\nmessage: ${exampleMessage}\nnonce: ${nonce}`
+    const msgBytes = new Uint8Array(Buffer.from(fullmsg, 'utf8'))
+    const publicKeyBytes = await ed.getPublicKey(stripHexPrefix(privateKeyHex));
+    const publicKeyHex = hexlify(publicKeyBytes)
+    const signatureBytes = await ed.sign(msgBytes, stripHexPrefix(privateKeyHex))
+    const signatureHex = hexlify(signatureBytes)
+    console.log({ publicKey: publicKeyHex, signature: signatureHex })
+    setSignResult(stripHexPrefix(signatureHex))
+  }, [exampleMessage, account, chainId]);
+
+  const handleSignMessageVerify =  async () => {
+    try {
+      const from = account[0]
+      const nonce = "random_string"
+      const fullmsg = `APTOS\nmessage: ${exampleMessage}\nnonce: ${nonce}`
+      const msgBytes = new Uint8Array(Buffer.from(fullmsg, 'utf8'))
+      const publicKeyBytes = await ed.getPublicKey(stripHexPrefix(privateKeyHex));
+      const publicKeyHex = hexlify(publicKeyBytes)
+      const signatureBytes =  arrayify(addHexPrefix(signResult))
+      const isSigned = await ed.verify(signatureBytes, msgBytes, publicKeyBytes);
+      if (isSigned) {
+        setSignVerifyResult(`Successfully verified account publicKey as ${ publicKeyHex }`)
+      } else {
+        setSignVerifyResult(`Verify failed: ${ address } !==  ${ from }`)
+      }
+    } catch (err) {
+      setSignVerifyResult(`Error: ${ err.message }`)
+    }
+  } 
 
   return (
     <div className="tracking-widest">
@@ -274,6 +329,43 @@ export const App = () => {
                     }}
                   >
                     0x1::coin::transfer Token
+                  </div>
+                </div>
+                {/* Personal Sign */}
+               <div className="mt-4 shadow-2xl rounded-2xl border-2 border-slate-50 p-2">
+                  <div className="font-bold">Personal Sign</div>
+                  <div className="flex justify-center">
+                        {exampleMessage}
+                  </div>
+                  <div
+                    className="cursor-pointer duration-300 w-full p-4 mt-4 text-white bg-blue-900 hover:bg-blue-700 rounded-2xl flex justify-center font-bold"
+                    onClick={handleSignMessage}
+                  >
+                    Sign Message
+                  </div>
+                  <div
+                    className={classnames(
+                      "mt-2 bg-amber-100 text-green-900 p-2 flex justify-center flex-col break-all",
+                       "opacity-100" 
+                    )}
+                  >
+                    Result:
+                    <div>{signResult}</div>
+                  </div>
+                  <div
+                    className="cursor-pointer duration-300 w-full p-4 mt-4 text-white bg-blue-900 hover:bg-blue-700 rounded-2xl flex justify-center font-bold"
+                    onClick={handleSignMessageVerify}
+                  >
+                    Verify
+                  </div>
+                  <div
+                    className={classnames(
+                      "mt-2 bg-amber-100 text-green-900 p-2 flex justify-center flex-col break-all",
+                       "opacity-100" 
+                    )}
+                  >
+                    Recovery Result:
+                    <div>{signVerifyResult}</div>
                   </div>
                 </div>
               </div>
