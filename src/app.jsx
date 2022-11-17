@@ -53,8 +53,10 @@ export const App = () => {
   // 已连接账户
   const [account, setAccount] = useState([]);
   const [chainId, setChainId] = useState(1);
+  const [publicKey, setPublicKey] = useState([]);
   const [isInstall, setInstall] = useState(true);
   const [signResult, setSignResult] = useState("");
+  const [signedMessageResponse, setSignedMessageResponse] = useState(null);
   const [signVerifyResult, setSignVerifyResult] = useState("");
 
   const freshConnected = useCallback(async () => {
@@ -137,48 +139,43 @@ export const App = () => {
   }, [defaultToAddr, defaultExpired, defaultAmount]);
 
   const exampleMessage = 'Example `personal_sign` message 中文'
-  const privateKeyHex = '2d0e69083decab751f8df38b7ca2c4f9f26691e3f06aa82290ee242cfc96dd93'
+  const nonce = "random_string"
+  const msgPayload = {
+    message: exampleMessage,
+    nonce,
+    // chainId: true,
+    // address: true,
+    // application: true
+  }
 
   const handleSignMessage = useCallback(async () => {
-    // const from = account[0]
-    // const msg = `0x${ Buffer.from(exampleMessage, 'utf8').toString('hex') }`
-    // console.log({ msg })
-    // const networkId = chainId
-    // const extraParams = { networkId }
-    // const sign = await window.starcoin.request({
-    //   method: 'personal_sign',
-    //   // params: [msg, from, 'Example password'],
-    //   // extraParams = params[2] || {}; means it should be an object:
-    //   // params: [msg, from, { pwd: 'Example password' }],
-    //   params: [msg, from, extraParams],
-    // })
-    // setSignResult(sign)
-
-    const nonce = "random_string"
-    const fullmsg = `APTOS\nmessage: ${exampleMessage}\nnonce: ${nonce}`
-    const msgBytes = new Uint8Array(Buffer.from(fullmsg, 'utf8'))
-    const publicKeyBytes = await ed.getPublicKey(stripHexPrefix(privateKeyHex));
-    const publicKeyHex = hexlify(publicKeyBytes)
-    const signatureBytes = await ed.sign(msgBytes, stripHexPrefix(privateKeyHex))
-    const signatureHex = hexlify(signatureBytes)
-    console.log({ publicKey: publicKeyHex, signature: signatureHex })
-    setSignResult(stripHexPrefix(signatureHex))
+    setSignResult('')
+    setSignedMessageResponse(null)
+    try {
+      const signMessageResponse = await window.starcoin.request({
+        method: 'apt_sign',
+        params: [msgPayload],
+      })
+      console.log({signMessageResponse})
+      setSignedMessageResponse(signMessageResponse)
+      setSignResult(signMessageResponse.signature)
+    }
+    catch (e) {
+      setSignResult(e.message || "Unkown Error");
+    }
   }, [exampleMessage, account, chainId]);
 
   const handleSignMessageVerify =  async () => {
     try {
-      const from = account[0]
-      const nonce = "random_string"
-      const fullmsg = `APTOS\nmessage: ${exampleMessage}\nnonce: ${nonce}`
-      const msgBytes = new Uint8Array(Buffer.from(fullmsg, 'utf8'))
-      const publicKeyBytes = await ed.getPublicKey(stripHexPrefix(privateKeyHex));
-      const publicKeyHex = hexlify(publicKeyBytes)
+      const msgBytes = new Uint8Array(Buffer.from(signedMessageResponse.fullMessage, 'utf8'))
+      const publicKeyHex = addHexPrefix(publicKey)
+      const publicKeyBytes = arrayify(publicKeyHex)
       const signatureBytes =  arrayify(addHexPrefix(signResult))
       const isSigned = await ed.verify(signatureBytes, msgBytes, publicKeyBytes);
       if (isSigned) {
         setSignVerifyResult(`Successfully verified account publicKey as ${ publicKeyHex }`)
       } else {
-        setSignVerifyResult(`Verify failed: ${ address } !==  ${ from }`)
+        setSignVerifyResult(`Verify failed`)
       }
     } catch (err) {
       setSignVerifyResult(`Error: ${ err.message }`)
@@ -352,11 +349,21 @@ export const App = () => {
                     Result:
                     <div>{signResult}</div>
                   </div>
+                  <div className="mt-1">PublicKey (StarMask -> Account Details -> View PublicKey)</div>
+                  <div className="mt-1">
+                    <input
+                      className="w-full focus:outline-none p-4 border-solid border-2 border-x-sky-100 rounded-2xl"
+                      value={publicKey}
+                      onChange={(e) => {
+                        setPublicKey(e.target.value);
+                      }}
+                    />
+                  </div>
                   <div
                     className="cursor-pointer duration-300 w-full p-4 mt-4 text-white bg-blue-900 hover:bg-blue-700 rounded-2xl flex justify-center font-bold"
                     onClick={handleSignMessageVerify}
                   >
-                    Verify
+                    Verify with Account PublicKey
                   </div>
                   <div
                     className={classnames(
@@ -364,7 +371,7 @@ export const App = () => {
                        "opacity-100" 
                     )}
                   >
-                    Recovery Result:
+                    Verify Result:
                     <div>{signVerifyResult}</div>
                   </div>
                 </div>
