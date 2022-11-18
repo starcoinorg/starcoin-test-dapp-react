@@ -4,7 +4,7 @@ import classnames from "classnames";
 import { providers } from "@starcoin/starcoin";
 import StarMaskOnboarding from "@starcoin/starmask-onboarding";
 import { AptosClient } from 'aptos';
-import * as ed from '@noble/ed25519';
+import nacl from 'tweetnacl';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { Account, Mask, makeModal, Token, NODE_URL } from "./modal";
@@ -167,12 +167,13 @@ export const App = () => {
 
   const handleSignMessageVerify =  async () => {
     try {
-      const msgBytes = new Uint8Array(Buffer.from(signedMessageResponse.fullMessage, 'utf8'))
       const publicKeyHex = addHexPrefix(publicKey)
-      const publicKeyBytes = arrayify(publicKeyHex)
-      const signatureBytes =  arrayify(addHexPrefix(signResult))
-      const isSigned = await ed.verify(signatureBytes, msgBytes, publicKeyBytes);
-      if (isSigned) {
+      const verified = nacl.sign.detached.verify(
+        Buffer.from(signedMessageResponse.fullMessage, 'utf8'),
+        Buffer.from(signedMessageResponse.signature, 'hex'),
+        Buffer.from(stripHexPrefix(publicKey), 'hex'),
+      );
+      if (verified) {
         setSignVerifyResult(`Successfully verified account publicKey as ${ publicKeyHex }`)
       } else {
         setSignVerifyResult(`Verify failed`)
