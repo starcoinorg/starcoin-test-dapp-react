@@ -1286,10 +1286,10 @@
     "@noble/hashes" "~1.1.1"
     "@scure/base" "~1.1.0"
 
-"@starcoin/starcoin@2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@starcoin/starcoin/-/starcoin-2.2.0.tgz#1096923c98908cfdbf16b279a5f2f34aac3ceeb5"
-  integrity sha512-/7QDvgq2oo0Kbxkc9vKHpa+p66/z6+7dFdvhkSGEwR505vpw7Y5o8wPK3+q10sgEh/J+aIBH9PhWDgOleVhxKA==
+"@starcoin/starcoin@^2.3.5":
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/@starcoin/starcoin/-/starcoin-2.3.5.tgz#a50b8b7a7b69532b4f68877e6c2cd0f961f5777e"
+  integrity sha512-8s6Kl2oY92zR74ljcrYzSpXMkjD7oGGcmkn8HXhAmGhGhudkvvd96WJbtjgY9JpeGLYrOSbFFOjDOj0KQBf9pA==
   dependencies:
     "@ethersproject/basex" "^5.0.4"
     "@ethersproject/bignumber" "^5.0"

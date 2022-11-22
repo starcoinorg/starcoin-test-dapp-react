@@ -92,16 +92,16 @@ export const Account = (props) => {
           [BCS.bcsToBytes(TxnBuilderTypes.AccountAddress.fromHex(account)), BCS.bcsSerializeUint64(sendAmountNanoSTC.toNumber())],
         ),
       );
-      console.log({entryFunctionPayload})
-      console.log( entryFunctionPayload instanceof TxnBuilderTypes.TransactionPayloadEntryFunction)
-      const rawTxn = await client.generateRawTransaction(account, entryFunctionPayload);
-      console.log({rawTxn})
-      const privateKeyObject = { privateKeyHex: '0x5d996aa76b3212142792d9130796cd2e11e3c445a93118c08414df4f66bc60ec' };
-      const a1 = AptosAccount.fromAptosAccountObject(privateKeyObject);
-      const bcsTxn = AptosClient.generateBCSTransaction(a1, rawTxn);
-      console.log({bcsTxn})
-      const bcsTxnHex = hexlify(bcsTxn)
-      console.log({bcsTxnHex})
+      // console.log({entryFunctionPayload})
+      // console.log( entryFunctionPayload instanceof TxnBuilderTypes.TransactionPayloadEntryFunction)
+      // const rawTxn = await client.generateRawTransaction(account, entryFunctionPayload);
+      // console.log({rawTxn})
+      // const privateKeyObject = { privateKeyHex: '0x5d996aa76b3212142792d9130796cd2e11e3c445a93118c08414df4f66bc60ec' };
+      // const a1 = AptosAccount.fromAptosAccountObject(privateKeyObject);
+      // const bcsTxn = AptosClient.generateBCSTransaction(a1, rawTxn);
+      // console.log({bcsTxn})
+      // const bcsTxnHex = hexlify(bcsTxn)
+      // console.log({bcsTxnHex})
 
       console.log(BCS.bcsToBytes(entryFunctionPayload))
       const entryFunctionPayloadHex= hexlify(BCS.bcsToBytes(entryFunctionPayload))
@@ -117,8 +117,18 @@ export const Account = (props) => {
       // const bcsTxnHex2 = hexlify(bcsTxn2)
       // console.log({bcsTxnHex2})
 
+      const transaction = {
+        type: 'entry_function_payload',
+        function: '0x1::coin::transfer',
+        type_arguments: ['0x1::aptos_coin::AptosCoin'],
+        arguments: [account, sendAmountNanoSTC.toNumber()],
+      };
+      console.log({transaction})
+      const rawTxn3 = await client.generateTransaction(account, transaction);
+      console.log({rawTxn3})
       const txParams = {
-        data: entryFunctionPayloadHex,
+        // data: entryFunctionPayloadHex,
+        functionAptos: transaction
       };
       console.log({txParams})
       // const expiredSecs = parseInt(expired, 10);
@@ -195,72 +205,40 @@ export const Token = (props) => {
   const { initAccount, initAmount, initCode } = props;
   const { isShow } = useFadeIn();
   const [account, setAccount] = useState(
-    initAccount || ""
+    initAccount || "0x67bfab475d188c3d5a17d1f067c715e78d46ea38af43e601530d79431659c518"
   );
-  const [amount, setAmount] = useState(initAmount || "1");
-  const [code, setCode] = useState(initCode || "");
+  const [amount, setAmount] = useState(initAmount || "0.01");
+  const [code, setCode] = useState(initCode || "0x1::aptos_coin::AptosCoin");
   const [hash, setHash] = useState("");
 
   const handleCall = useCallback(async () => {
     try {
-      console.log({token,account,amount})
-      // const client = new AptosClient(NODE_URL)
+      console.log({code,account,amount})
+      const client = new AptosClient(NODE_URL)
 
       const sendAmount = parseFloat(amount, 10);
       if (!(sendAmount > 0)) {
         window.alert("Invalid sendAmount: should be a number!");
         return false;
       }
-      const BIG_NUMBER_NANO_STC_MULTIPLIER = new BigNumber("1000000000");
+      const BIG_NUMBER_NANO_STC_MULTIPLIER = new BigNumber("100000000");
       const sendAmountSTC = new BigNumber(sendAmount);
       const sendAmountNanoSTC = sendAmountSTC.times(
         BIG_NUMBER_NANO_STC_MULTIPLIER
       );
       console.log(amount,sendAmount,sendAmountNanoSTC.toNumber())
 
-      const token = new TxnBuilderTypes.TypeTagStruct(TxnBuilderTypes.StructTag.fromString(code));
-      const entryFunctionPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-        TxnBuilderTypes.EntryFunction.natural(
-          "0x1::coin",
-          "transfer",
-          [token],
-          [BCS.bcsToBytes(TxnBuilderTypes.AccountAddress.fromHex(account)), BCS.bcsSerializeUint64(sendAmountNanoSTC.toNumber())],
-        ),
-      );
-      console.log({entryFunctionPayload})
-      console.log( entryFunctionPayload instanceof TxnBuilderTypes.TransactionPayloadEntryFunction)
-      // const rawTxn = await client.generateRawTransaction(account, entryFunctionPayload);
-      // console.log({rawTxn})
-      // const privateKeyObject = { privateKeyHex: '0x5d996aa76b3212142792d9130796cd2e11e3c445a93118c08414df4f66bc60ec' };
-      // const a1 = AptosAccount.fromAptosAccountObject(privateKeyObject);
-      // const bcsTxn = AptosClient.generateBCSTransaction(a1, rawTxn);
-      // console.log({bcsTxn})
-      // const bcsTxnHex = hexlify(bcsTxn)
-      // console.log({bcsTxnHex})
-
-      console.log(BCS.bcsToBytes(entryFunctionPayload))
-      const entryFunctionPayloadHex= hexlify(BCS.bcsToBytes(entryFunctionPayload))
-      console.log({entryFunctionPayloadHex})
-
-      console.log(arrayify(entryFunctionPayloadHex))
-      const deserializer = new BCS.Deserializer(arrayify(entryFunctionPayloadHex));
-      const entryFunctionPayload2 = TxnBuilderTypes.TransactionPayloadEntryFunction.deserialize(deserializer);
-      console.log( entryFunctionPayload2 instanceof TxnBuilderTypes.TransactionPayloadEntryFunction)
-      console.log('args',entryFunctionPayload2.value.args)
-      console.log('amount',entryFunctionPayload2.value.args[1])
-      const deserializer2 = new BCS.Deserializer(entryFunctionPayload2.value.args[1]);
-      console.log(deserializer2.deserializeU64())
-      const deserializer3 = new BCS.Deserializer(entryFunctionPayload2.value.args[0]);
-      console.log(TxnBuilderTypes.AccountAddress.deserialize(deserializer3))
-      console.log(hexlify(entryFunctionPayload2.value.args[0]))
-      // const rawTxn2 = await client.generateRawTransaction(account, entryFunctionPayload2);
-      // const bcsTxn2 = AptosClient.generateBCSTransaction(a1, rawTxn2);
-      // console.log({bcsTxn2})
-      // const bcsTxnHex2 = hexlify(bcsTxn2)
-      // console.log({bcsTxnHex2})
-
+      const transaction = {
+        type: 'entry_function_payload',
+        function: '0x1::coin::transfer',
+        type_arguments: [code],
+        arguments: [account, sendAmountNanoSTC.toNumber()],
+      };
+      console.log({transaction})
+      const rawTxn3 = await client.generateTransaction(account, transaction);
+      console.log({rawTxn3})
       const txParams = {
-        data: entryFunctionPayloadHex,
+        functionAptos: transaction
       };
       console.log({txParams})
       // const expiredSecs = parseInt(expired, 10);
